@@ -9,11 +9,10 @@ double trei_z(double n){
 
 double volatilitate(node *n1, double med, int n){
 	double vol=0;
-	for(int i=0; i<n; i++){
-		vol+=(n1->randament-med)*(n1->randament-med);
-		n1=n1->next;
+	for(node *aux = n1->next; aux != NULL; aux = aux->next){
+		vol+=(aux->randament-med)*(aux->randament-med);
 	}
-	vol/=n-1;
+	vol/=(n-1);
 	vol=sqrt(vol);
 	return vol;
 }
@@ -37,11 +36,21 @@ void calc_lista(node *n1, int n, FILE *f, FILE *fo){
 	//VOLATILITATEA
 	double vol = volatilitate(head,randament_mediu, n); 
 	//SHARPE RATIO
-	double sharpe_ratio=randament_mediu/vol;
+	double sharpe=randament_mediu/vol;
+
 	//OUTPUT
 	fprintf(fo,"%.3lf\n",trei_z(randament_mediu));
 	fprintf(fo,"%.3lf\n",trei_z(vol));
-	fprintf(fo,"%lf", sharpe_ratio);
+	fprintf(fo,"%.3lf\n",trei_z(sharpe));
+}
+
+void sterge(node *head){
+	node *n;
+	do{
+		n=head->next;
+		free(head);
+		head=n;
+	}while(head);
 }
 
 void sharpe_ratio(FILE *fi, FILE *fo){
@@ -50,11 +59,12 @@ void sharpe_ratio(FILE *fi, FILE *fo){
 	head->randament=0;
 	//INPUTUL DATELOR
 	int n;
-	printf("Introdu numarul total de observatii: ");
+	//printf("Introdu numarul total de observatii: ");
 	fscanf(fi,"%d",&n);
 	//VALOAREA CAPULUI LISTEI TREBUIE INTRODUSA SEPARAT
-	printf("Introdu valoarea actiunii din ziua 1: ");
+	//printf("Introdu valoarea actiunii din ziua 1: ");
 	fscanf(fi,"%lf",&head->valoare);
 	//INTRODUCEM RESTUL LISTEI
 	calc_lista(head, n, fi, fo);
+	sterge(head);
 }
