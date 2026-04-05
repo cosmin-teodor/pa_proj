@@ -57,8 +57,9 @@ void sharpe_ratio(FILE *fi, FILE *fo){
 	//INITIALIZAM LISTA
 	node *head=(node *)malloc(sizeof(node));
 	head->randament=0;
+	head->next=NULL;
 	//INPUTUL DATELOR
-	int n;
+	int n=0;
 	//printf("Introdu numarul total de observatii: ");
 	fscanf(fi,"%d",&n);
 	//VALOAREA CAPULUI LISTEI TREBUIE INTRODUSA SEPARAT
