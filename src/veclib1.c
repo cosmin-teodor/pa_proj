@@ -1,71 +1,103 @@
 #include "veclib1.h"
+#include<ctype.h>
 
-double trei_z(double n){
-	n*=1000.0;
-	n=(int)n;
-	n/=1000.0;
-	return n;
+void add(Node **head, char buff[]){
+	Node *n=malloc(sizeof(Node));
+	n->prev=*head;
+	n->pret=atoi(buff);
+	(*head)=n;
+	// printf("%s ",buff);
 }
 
-double volatilitate(node *n1, double med, int n){
-	double vol=0;
-	for(node *aux = n1->next; aux != NULL; aux = aux->next){
-		vol+=(aux->randament-med)*(aux->randament-med);
-	}
-	vol/=(n-1);
-	vol=sqrt(vol);
-	return vol;
-}
-
-void calc_lista(node *n1, int n, FILE *f, FILE *fo){
-	node *head=n1;
-	node *n2;
-	//i incepe de la 1 pt ca am citit headul
-	double randament_mediu=0;
-	for(int i=1; i<n; i++){
-		printf("Introduce valoarea actiunii din ziua %d: ",i+1);
-		n2=(node *)malloc(sizeof(node));
-		n1->next=n2;
-		fscanf(f,"%lf",&n2->valoare);
-		n2->randament=(n2->valoare-n1->valoare)/n1->valoare;
-		randament_mediu+=n2->randament;
-		n2->next=NULL;
-		n1=n2;
-	}
-	randament_mediu=randament_mediu/(n-1);
-	//VOLATILITATEA
-	double vol = volatilitate(head,randament_mediu, n); 
-	//SHARPE RATIO
-	double sharpe=randament_mediu/vol;
-
-	//OUTPUT
-	fprintf(fo,"%.3lf\n",trei_z(randament_mediu));
-	fprintf(fo,"%.3lf\n",trei_z(vol));
-	fprintf(fo,"%.3lf\n",trei_z(sharpe));
-}
-
-void sterge(node *head){
-	node *n;
+void read(char nume[3][20],Node **head1, Node **head2, Node **head3, FILE *fi){
+	char buff[20],c;
+	int i=-1, nr_piata=-1;
 	do{
-		n=head->next;
-		free(head);
-		head=n;
-	}while(head);
+		c=fgetc(fi);
+		//printf("%c",c);
+		i++;
+		if(c==EOF || c=='\n'){
+			buff[i]='\0';
+			if(isalpha(buff[0]))
+				strcpy(nume[++nr_piata],buff);
+			else{
+				if(nr_piata==0)
+					add(head1,buff);
+				else if(nr_piata==1)
+					add(head2,buff);
+				else add(head3,buff);
+			}
+			i=-1;
+		}
+		else{
+			buff[i]=c;
+		}
+	}while(c!=EOF);
+}
+/*
+void write(Node *head){		//pt testul stackurilor
+	printf("%d ",head->pret);
+	if(head->prev->prev!=NULL)
+		write(head->prev);
+}
+*/
+
+op *add_coada(op *coada,char piata[20],int diferenta, int ziua){
+	op *new=malloc(sizeof(op));
+	new->dif=diferenta;
+	strcpy(new->nume,piata);
+	new->zi=ziua;
+	coada->next=new;
+	new->next=NULL;
+	printf("ziua %d diferenta %d piata %s \n",new->zi,new->dif,new->nume);
+	return new;
 }
 
-void sharpe_ratio(FILE *fi, FILE *fo){
-	//INITIALIZAM LISTA
-	node *head=(node *)malloc(sizeof(node));
-	head->randament=0;
-	head->next=NULL;
-	//INPUTUL DATELOR
-	int n=0;
-	//printf("Introdu numarul total de observatii: ");
-	fscanf(fi,"%d",&n);
-	//VALOAREA CAPULUI LISTEI TREBUIE INTRODUSA SEPARAT
-	//printf("Introdu valoarea actiunii din ziua 1: ");
-	fscanf(fi,"%lf",&head->valoare);
-	//INTRODUCEM RESTUL LISTEI
-	calc_lista(head, n, fi, fo);
-	sterge(head);
+int oportunitati(op *coada, char nume[3][20], Node *head1,Node *head2, Node *head3, int zi){
+	if(head1->prev==NULL||head2->prev==NULL||head3->prev==NULL)
+		return 0;
+	int egal12=(head1->pret==head2->pret);
+	int egal13=(head1->pret==head3->pret);
+	int egal23=(head2->pret==head3->pret);
+	if(egal12&&!egal13)
+		coada=add_coada(coada,nume[2],abs(head1->pret-head3->pret),zi);
+	if(egal13&&!egal12)
+		coada=add_coada(coada,nume[1],abs(head1->pret-head2->pret),zi);
+	if(egal23&&!egal13)
+		coada=add_coada(coada,nume[0],abs(head1->pret-head3->pret),zi);
+	oportunitati(coada,nume,head1->prev,head2->prev,head3,zi+1);
+}
+
+op *compare_oportunitati(op *coada, int dif_max, op *oportunitate_max){
+	if(coada==NULL)
+		return oportunitate_max;
+	if(coada->dif>dif_max){
+		return compare_oportunitati(coada->next,coada->dif,coada);
+		printf("%s in ziua %d e max\n",coada->nume,coada->zi);
+	}
+	else
+		return compare_oportunitati(coada->next,dif_max,oportunitate_max);
+}
+
+void arbitraj(FILE *fi, FILE *fo){
+	Node *head1=malloc(sizeof(Node));
+	Node *head2=malloc(sizeof(Node));
+	Node *head3=malloc(sizeof(Node));
+	head1->prev=NULL;
+	head1->pret=-1;
+	head2->prev=NULL;
+	head2->pret=-1;
+	head3->prev=NULL;
+	head3->pret=-1;
+	char nume[3][20];
+	read(nume,&head1,&head2,&head3,fi);
+	head3=head3->prev;
+	op *coada=malloc(sizeof(op));
+	op *coada1=malloc(sizeof(op));
+	coada->next=NULL;
+	coada1->next=NULL;
+	oportunitati(coada,nume,head1,head2,head3,1);
+	op *oportunitate_max=malloc(sizeof(op));
+	oportunitate_max=compare_oportunitati(coada1,0,oportunitate_max);
+	printf("ziua %d - %d - %s",oportunitate_max->zi,oportunitate_max->dif,oportunitate_max->nume);
 }

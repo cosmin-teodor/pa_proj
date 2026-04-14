@@ -1,14 +1,23 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
+#include<string.h>
 
-typedef struct Node {
-	double valoare;
-	double randament;
-	struct Node *next;
-} node;
+typedef struct node {
+	int pret;
+	struct node *prev;
+} Node;
 
-double volatilitate(node *n1, double med, int n);
-void test_lista(node *n);
-void calc_lista(node *n1, int n, FILE *f, FILE *fo);
-void sharpe_ratio(FILE *fi, FILE *fo);
+typedef struct p{
+	int zi;
+	int dif;
+	char nume[10];
+	struct p *next;	
+}op;
+
+void arbitraj(FILE *fi, FILE *fo);
+void read(char nume[3][20],Node **head1, Node **head2, Node **head3, FILE *fi);
+void add(Node **head, char buff[20]);
+void write(Node *head);
+int oportunitati(op *coada, char nume[3][20],Node *head1,Node *head2, Node *head3,int zi);
+op *add_coada(op *coada,char piata[20],int diferenta, int ziua);
