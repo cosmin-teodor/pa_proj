@@ -4,7 +4,7 @@
 void add(Node **head, char buff[]){
 	Node *n=malloc(sizeof(Node));
 	n->prev=*head;
-	n->pret=atoi(buff);
+	n->pret=atof(buff);
 	(*head)=n;
 	// printf("%s ",buff);
 }
@@ -42,38 +42,41 @@ void write(Node *head){		//pt testul stackurilor
 }
 */
 
-op *add_coada(op *coada,char piata[20],int diferenta, int ziua){
+op *add_coada(op *coada,char piata[20],float diferenta, int ziua, FILE *fo){
 	op *new=malloc(sizeof(op));
+	if(diferenta<0)
+		diferenta*=-1;
 	new->dif=diferenta;
+	//printf("%f",diferenta);
 	strcpy(new->nume,piata);
 	new->zi=ziua;
 	coada->next=new;
 	new->next=NULL;
-	printf("ziua %d diferenta %d piata %s \n",new->zi,new->dif,new->nume);
+	fprintf(fo,"ziua %d - %.2f - %s\n",new->zi,new->dif,new->nume);
 	return new;
 }
 
-int oportunitati(op *coada, char nume[3][20], Node *head1,Node *head2, Node *head3, int zi){
+int oportunitati(op *coada, char nume[3][20], Node *head1,Node *head2, Node *head3, int zi, FILE *fo){
 	if(head1->prev==NULL||head2->prev==NULL||head3->prev==NULL)
 		return 0;
 	int egal12=(head1->pret==head2->pret);
 	int egal13=(head1->pret==head3->pret);
 	int egal23=(head2->pret==head3->pret);
 	if(egal12&&!egal13)
-		coada=add_coada(coada,nume[2],abs(head1->pret-head3->pret),zi);
+		coada=add_coada(coada,nume[2],head1->pret-head3->pret,zi,fo);
 	if(egal13&&!egal12)
-		coada=add_coada(coada,nume[1],abs(head1->pret-head2->pret),zi);
+		coada=add_coada(coada,nume[1],head1->pret-head2->pret,zi,fo);
 	if(egal23&&!egal13)
-		coada=add_coada(coada,nume[0],abs(head1->pret-head3->pret),zi);
-	oportunitati(coada,nume,head1->prev,head2->prev,head3,zi+1);
+		coada=add_coada(coada,nume[0],head1->pret-head3->pret,zi,fo);
+	oportunitati(coada,nume,head1->prev,head2->prev,head3->prev,zi+1,fo);
 }
 
 op *compare_oportunitati(op *coada, int dif_max, op *oportunitate_max){
 	if(coada==NULL)
 		return oportunitate_max;
 	if(coada->dif>dif_max){
+		//printf("%s in ziua %d e max\n",coada->nume,coada->zi);
 		return compare_oportunitati(coada->next,coada->dif,coada);
-		printf("%s in ziua %d e max\n",coada->nume,coada->zi);
 	}
 	else
 		return compare_oportunitati(coada->next,dif_max,oportunitate_max);
@@ -96,8 +99,8 @@ void arbitraj(FILE *fi, FILE *fo){
 	op *coada1=malloc(sizeof(op));
 	coada->next=NULL;
 	coada1->next=NULL;
-	oportunitati(coada,nume,head1,head2,head3,1);
+	oportunitati(coada,nume,head1,head2,head3,1,fo);
 	op *oportunitate_max=malloc(sizeof(op));
 	oportunitate_max=compare_oportunitati(coada1,0,oportunitate_max);
-	printf("ziua %d - %d - %s",oportunitate_max->zi,oportunitate_max->dif,oportunitate_max->nume);
+	//printf("ziua %d - %d - %s",oportunitate_max->zi,oportunitate_max->dif,oportunitate_max->nume);
 }
