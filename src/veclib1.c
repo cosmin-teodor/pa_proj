@@ -1,7 +1,7 @@
 #include "veclib1.h"
 #include<ctype.h>
 
-void add(Node **head, char buff[]){
+void add(Node **head, const char buff[]){
 	Node *n=malloc(sizeof(Node));
 	n->prev=*head;
 	n->pret=atof(buff);
@@ -10,7 +10,8 @@ void add(Node **head, char buff[]){
 }
 
 void read(char nume[3][20],Node **head1, Node **head2, Node **head3, FILE *fi){
-	char buff[20],c;
+	char buff[20];
+	int c;
 	int i=-1, nr_piata=-1;
 	do{
 		c=fgetc(fi);
@@ -42,7 +43,7 @@ void write(Node *head){		//pt testul stackurilor
 }
 */
 
-op *add_coada(op *coada,char piata[20],float diferenta, int ziua, FILE *fo){
+op *add_coada(op *coada,const char piata[20],float diferenta, int ziua, FILE *fo){
 	op *new=malloc(sizeof(op));
 	if(diferenta<0)
 		diferenta*=-1;
@@ -82,6 +83,21 @@ op *compare_oportunitati(op *coada, int dif_max, op *oportunitate_max){
 		return compare_oportunitati(coada->next,dif_max,oportunitate_max);
 }
 
+void elibereaza_stiva(Node *head){
+	Node *n=head->prev;
+	free(head);
+	if(n!=NULL){
+		elibereaza_stiva(n);
+	}
+}
+
+void elibereaza_coada(op *coada){
+	op *n=coada->next;
+	free(coada);
+	if(n!=NULL)
+		elibereaza_coada(n);
+}
+
 void arbitraj(FILE *fi, FILE *fo){
 	Node *head1=malloc(sizeof(Node));
 	Node *head2=malloc(sizeof(Node));
@@ -94,13 +110,14 @@ void arbitraj(FILE *fi, FILE *fo){
 	head3->pret=-1;
 	char nume[3][20];
 	read(nume,&head1,&head2,&head3,fi);
-	head3=head3->prev;
-	op *coada=malloc(sizeof(op));
-	op *coada1=malloc(sizeof(op));
-	coada->next=NULL;
-	coada1->next=NULL;
-	oportunitati(coada,nume,head1,head2,head3,1,fo);
+	op *coada=calloc(1,sizeof(op));
+	oportunitati(coada,nume,head1,head2,head3->prev,1,fo);
 	op *oportunitate_max=malloc(sizeof(op));
-	oportunitate_max=compare_oportunitati(coada1,0,oportunitate_max);
+	compare_oportunitati(coada,0,oportunitate_max);
 	//printf("ziua %d - %d - %s",oportunitate_max->zi,oportunitate_max->dif,oportunitate_max->nume);
+	free(oportunitate_max);
+	elibereaza_stiva(head1);
+	elibereaza_stiva(head2);
+	elibereaza_stiva(head3); 
+	elibereaza_coada(coada);
 }

@@ -9,6 +9,7 @@ int main(int argc,const char* argv[]){
 	FILE *fo=fopen(argv[2],"w");
 	if(fi==NULL || fo==NULL){
 		printf("Problema la fisiere");
+		return 0;
 	}
 	arbitraj(fi,fo);
 	fclose(fi);
