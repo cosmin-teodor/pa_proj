@@ -11,7 +11,7 @@ int main(int argc,const char* argv[]){
 		printf("Problema la fisiere");
 		return 0;
 	}
-	diversification(fi,fo);
+	Markov(fi, fo);
 	fclose(fi);
 	fclose(fo);
 	return 0;
